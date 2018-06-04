@@ -7,31 +7,31 @@ class Database(object):
     Typical usage would be of subclass only.
 
     """
-    def __init__(self, name, dbtype=None, table=None, connectionData=None, dryRun=False):
+    def __init__(self, name, database_type=None, db_schema=None, connectionData=None, dryRun=False):
         """
 
         :param name: name of database. This is not a label but the actual database name
-        :param dbtype: type of database being used e.g. "SQL", "MONGODB"
+        :param database_type: type of database being used e.g. "SQL", "MONGODB"
         :param connectionData: connectionData object with required information for server/database connection
-        :param table:
+        :param db_schema:
         :param dryRun:
         """
         self.name = name
-        self.dbtype = dbtype
+        self._database_type = database_type
         self.connectionData = connectionData
-        self.table = table
+        self.db_schema = db_schema
         self.dryRun = dryRun
 
         self._cache = {}
 
     def __str__(self):
-        if self.dbtype:
-            return '{}/{}/{}'.format(self.__class__.__name__, self.name, self.dbtype)
+        if self._database_type:
+            return '{}/{}/{}'.format(self.__class__.__name__, self.name, self._database_type)
         else:
             return '{}/{}'.format(self.__class__.__name__, self.name)
 
     def __repr__(self):
-        return '<{}(object)> - db:{}, type:{}, table:{})'.format(self.__class__.__name__, self.name, self.dbtype, self.table)
+        return '<{}(object)> - db:{}, type:{}, db_schema:{})'.format(self.__class__.__name__, self.name, self._database_type, self.db_schema)
 
     @property
     def database(self):
@@ -39,7 +39,7 @@ class Database(object):
 
     @property
     def database_type(self):
-        return self.dbtype
+        return self._database_type
 
     def _connect(self):
         """
@@ -70,8 +70,8 @@ class Database(object):
         """
         raise NotImplementedError('Implement in subclass')
 
-    @classmethod
-    def clean_result(cls):
+    @staticmethod
+    def clean_result(value):
         """
 
         :param value:
@@ -147,21 +147,20 @@ class Database(object):
 def get_database(**kwargs):
     """
     wraps the Database object and returns with subclass of Database.
-    This is because setting the dbtype directly wont return the subclass
+    This is because setting the database_type directly wont return the subclass
 
     :param kwargs: same kwargs as defined in Database class
     :return: subclass of DatabaseObject
     """
-    dbtype = kwargs.pop('dbtype')
-    if dbtype == 'SQL':
+    database_type = kwargs.pop('database_type')
+    if database_type == 'SQL':
         return Database(**kwargs)
-
 
 
 if __name__ == '__main__':
     cd = connection.ConnectionData(user='testUser', passwd='password')
 
-    # Instantiate a Database object not very useful as there's no dbtype defined
+    # Instantiate a Database object not very useful as there's no database_type defined
     db = Database(name='production', connectionData=cd, dryRun=False)
     print(db)
     print(db.__repr__())

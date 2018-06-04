@@ -4,7 +4,7 @@ import pydb.database as database
 
 class SQLDatabase(database.Database):
 
-    def __init__(self, name, table=None, **kwargs):
+    def __init__(self, name, db_schema, **kwargs):
         """
         Inherits Database class. Sets type to "SQL"
 
@@ -13,7 +13,12 @@ class SQLDatabase(database.Database):
         :param table:
         :param dryRun:
         """
-        super(SQLDatabase, self).__init__(name=name, dbtype='SQL', table=table, **kwargs)
+        super(SQLDatabase, self).__init__(name=name, database_type='SQL', db_schema=db_schema, **kwargs)
+
+    @property
+    def table(self):
+        """ For SQL style language """
+        return self.db_schema
 
     def _connect(self):
         """
@@ -60,6 +65,7 @@ class SQLDatabase(database.Database):
 
         except Exception as e:
             print(str(e))
+            return None
 
         finally:
             if cursor:
@@ -193,8 +199,3 @@ if __name__ == '__main__':
     db.insert(name='ball')
 
     print(db.query('name'))
-
-
-    #print(pydb.insert(name='myTestJob', user='test.user'))
-    #pydb.update(field='user', value='newUser', ID=12)
-    #print(db.query('name', user='newUser'))
