@@ -32,21 +32,21 @@ class SQLDatabase(database.Database):
                                db=self.name)
 
     def _raw_database_call(self, statement, use_cache=True):
-        return self.execute_sql(statement=statement, use_cache=use_cache)
+        return self.execute_sql(statement=statement)
 
-    def execute_sql(self, statement, use_cache=True):
+    def execute_sql(self, statement):
         """
 
-        :param statement:
-        :param use_cache: if True will attempt to use stored cache instead of accessing the pydb
-        :return:
+        :param statement:   *(str)* SQL statement
+        :param use_cache:   *(bool)* if True will attempt to use stored cache instead of accessing the pydb
+        :return:            *(bool)* False if failed
         """
-        # print('\nsql: {}\n'.format(statement))
+        print('\nsql: {}\n'.format(statement))
 
-        try:
-            return self._use_cache(statement)
-        except KeyError:
-            pass
+        #try:
+        #    return self._use_cache(statement)
+        #except KeyError:
+        #    pass
 
         if self.dryRun:
             return
@@ -64,8 +64,7 @@ class SQLDatabase(database.Database):
                 result = cursor.fetchall()
 
         except Exception as e:
-            print(str(e))
-            return None
+            raise e
 
         finally:
             if cursor:
@@ -73,11 +72,11 @@ class SQLDatabase(database.Database):
             if conn:
                 conn.close()
 
-        clean_result = self.clean_result(result)
+        result = self.clean_result(result)
 
-        self._store_cache(statement, clean_result)
+        self._store_cache(statement, result)
 
-        return clean_result
+        return result
 
     @staticmethod
     def clean_result(value):
@@ -94,23 +93,35 @@ class SQLDatabase(database.Database):
 
         return value
 
-    def query(self, field, **kwargs):
+    def query(self, fields, **kwargs):
         """
 
-        :param field:
+        :param fields:
+        :param distinct:
         :param kwargs:
         :return:
         """
-        if field is None:
-            field = '*'
+        distinct = kwargs.pop('distinct', False)
+
+        if fields is None:
+            fields = '*'
+
+        if isinstance(fields, (list, tuple)):
+            fields = '{}'.format(', '.join(fields))
 
         args = []
         for key, val in kwargs.items():
             args.append("{} = '{}'".format(key, val))
+
         if kwargs:
-            return self.execute_sql("SELECT {} FROM {} WHERE {}".format(field, self.table, " AND ".join(args)))
+            statement = "SELECT {} FROM {} WHERE {}".format(fields, self.table, " AND ".join(args))
         else:
-            return self.execute_sql("SELECT {} FROM {}".format(field, self.table))
+            statement = "SELECT {} FROM {}".format(fields, self.table)
+
+        if distinct is True:
+            statement = statement.replace('SELECT', 'SELECT DISTINCT')
+
+        return self.execute_sql(statement=statement)
 
     def query_like(self, field, **kwargs):
         """
