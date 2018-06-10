@@ -34,11 +34,12 @@ class SQLDatabase(database.Database):
     def _raw_database_call(self, statement, use_cache=True):
         return self.execute_sql(statement=statement)
 
-    def execute_sql(self, statement):
+    def execute_sql(self, statement, data_as_dict=False):
         """
 
         :param statement:   *(str)* SQL statement
         :param use_cache:   *(bool)* if True will attempt to use stored cache instead of accessing the pydb
+        :param data_as_dict:*(bool)* if True will return result as dictionary for one result or list of dictionaries
         :return:            *(bool)* False if failed
         """
         print('\nsql: {}\n'.format(statement))
@@ -56,7 +57,12 @@ class SQLDatabase(database.Database):
         cursor = None
         try:
             conn = self._connect()
-            cursor = conn.cursor()
+
+            if data_as_dict is True:
+                cursor = conn.cursor(pymysql.cursors.DictCursor)
+            else:
+                cursor = conn.cursor()
+
             status = cursor.execute(statement)
             conn.commit()
 
@@ -93,11 +99,12 @@ class SQLDatabase(database.Database):
 
         return value
 
-    def query(self, fields, **kwargs):
+    def query(self, fields=None, data_as_dict=False, **kwargs):
         """
 
-        :param fields:
-        :param distinct:
+        :param fields:          *(str, list(str))* the fields to query if None will query all '*'
+        :param data_as_dict:    *(bool)* if True will return result as dictionary for one result or list of dictionaries
+        :param distinct:        *(bool)* if True will return unqiue results only
         :param kwargs:
         :return:
         """
@@ -121,7 +128,7 @@ class SQLDatabase(database.Database):
         if distinct is True:
             statement = statement.replace('SELECT', 'SELECT DISTINCT')
 
-        return self.execute_sql(statement=statement)
+        return self.execute_sql(statement=statement, data_as_dict=data_as_dict)
 
     def query_like(self, field, **kwargs):
         """
@@ -136,23 +143,39 @@ class SQLDatabase(database.Database):
 
         return self.execute_sql("SELECT {} FROM {} WHERE {}".format(field, self.table, " AND ".join(args)))
 
-    def update(self, field, value, **kwargs):
+    def update(self, data=None, field=None, value=None, **kwargs):
         """
+        Update entries that match kwargs passed. Can take input as dict (param data) or as field-value params
 
-        :param field:
-        :param value:
-        :param kwargs:
+        :param data:    *(dict)* data takes preference over field, value
+        :param field:   *(list, str)*
+        :param value:   *(list, object)*
+        :param kwargs:  *(**dict)*
         :return:
         """
         if not kwargs:
             raise RuntimeError("Must set kwargs. Update without condition too dangerous.")
+
+        set_data = []
+
+        if data:
+            for key, val in data.items():
+                if key and val:
+                    set_data.append("{} = '{}'".format(key, val))
+
+        else:
+            if not field or not value:
+                raise RuntimeError('must pass both params "field" and "value" or use "data" param')
+            set_data.append('{} = {}'.format(field, value))
+
+        set_data = ', '.join(set_data)  # convert to comma-separated
 
         args = []
         for key, val in kwargs.items():
             args.append("{} = '{}'".format(key, val))
 
         condition = " AND ".join(args)
-        return self.execute_sql("UPDATE {} SET {} = '{}' WHERE {}".format(self.table, field, value, condition))
+        return self.execute_sql("UPDATE {} SET {} WHERE {}".format(self.table, set_data, condition))
 
     def insert(self, **kwargs):
         """
