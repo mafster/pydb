@@ -1,8 +1,9 @@
-from pymongo import MongoClient
 import pydb.database as database
 
-class MongoDatabase(database.Database):
+from pymongo import MongoClient
 
+
+class MongoDatabase(database.Database):
 
     def __init__(self, name, **kwargs):
         """

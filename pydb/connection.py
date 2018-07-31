@@ -1,14 +1,14 @@
 class ConnectionData(object):
 
-    def __init__(self, user, passwd, address='localhost', port=3306):
+    def __init__(self, username, password, address, port):
         """
 
-        :param user:
-        :param passwd:
+        :param username:
+        :param password:
         :param address:
         :param port:
         """
-        self.user = user
-        self.passwd = passwd
+        self.username = username
+        self.password = password
         self.address = address
-        self.port = port
+        self.port = int(port)  # convert port to integer

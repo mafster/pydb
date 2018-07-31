@@ -27,8 +27,8 @@ class SQLDatabase(database.Database):
         """
         return pymysql.connect(host=self.connectionData.address,
                                port=self.connectionData.port,
-                               user=self.connectionData.user,
-                               passwd=self.connectionData.passwd,
+                               user=self.connectionData.username,
+                               passwd=self.connectionData.password,
                                db=self.name)
 
     def _raw_database_call(self, statement, use_cache=True):
@@ -222,14 +222,3 @@ class SQLDatabase(database.Database):
         :return:
         """
         return self._cache[statement]
-
-
-if __name__ == '__main__':
-    import pydb.connection as connection
-    cd = connection.ConnectionData(user='testUser', passwd='password')
-
-    db = database.Database(name='production', connectionData=cd, dryRun=False)
-    db.table = 'asset'
-    db.insert(name='ball')
-
-    print(db.query('name'))

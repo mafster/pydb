@@ -1,6 +1,3 @@
-import pydb.connection as connection
-
-
 class Database(object):
     """
     Generic abstract database object. Define database calls in subclasses.
@@ -155,12 +152,3 @@ def get_database(**kwargs):
     database_type = kwargs.pop('database_type')
     if database_type == 'SQL':
         return Database(**kwargs)
-
-
-if __name__ == '__main__':
-    cd = connection.ConnectionData(user='testUser', passwd='password')
-
-    # Instantiate a Database object not very useful as there's no database_type defined
-    db = Database(name='production', connectionData=cd, dryRun=False)
-    print(db)
-    print(db.__repr__())
