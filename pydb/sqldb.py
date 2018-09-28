@@ -109,6 +109,10 @@ class SQLDatabase(database.Database):
         :return:
         """
         distinct = kwargs.pop('distinct', False)
+        order_by = kwargs.pop('order_by', None)
+
+        if isinstance(order_by, (list, tuple)):
+            order_by = '{}'.format(', '.join(order_by))
 
         if fields is None:
             fields = '*'
@@ -127,6 +131,9 @@ class SQLDatabase(database.Database):
 
         if distinct is True:
             statement = statement.replace('SELECT', 'SELECT DISTINCT')
+
+        if order_by:
+            statement = '{} ORDER BY {} ASC'.format(statement, order_by)  # defaults order to "ascending"
 
         return self.execute_sql(statement=statement, data_as_dict=data_as_dict)
 
