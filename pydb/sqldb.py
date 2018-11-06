@@ -1,3 +1,5 @@
+import warnings
+
 import pymysql
 import pydb.database as database
 
@@ -31,7 +33,7 @@ class SQLDatabase(database.Database):
                                passwd=self.connectionData.password,
                                db=self.name)
 
-    def _raw_database_call(self, statement, use_cache=True):
+    def raw_database_call(self, statement, use_cache=True):
         return self.execute_sql(statement=statement)
 
     def execute_sql(self, statement, data_as_dict=False):
@@ -42,7 +44,7 @@ class SQLDatabase(database.Database):
         :param data_as_dict:*(bool)* if True will return result as dictionary for one result or list of dictionaries
         :return:            *(bool)* False if failed
         """
-        print('\nsql: {}\n'.format(statement))
+        #print('\nsql: {}\n'.format(statement))
 
         #try:
         #    return self._use_cache(statement)
@@ -70,7 +72,7 @@ class SQLDatabase(database.Database):
                 result = cursor.fetchall()
 
         except Exception as e:
-            raise e
+            warnings.warn(e)
 
         finally:
             if cursor:

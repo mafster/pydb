@@ -46,7 +46,7 @@ class Database(object):
         """
         raise NotImplementedError('Implement in subclass')
 
-    def _raw_database_call(self, statement, use_cache=True):
+    def raw_database_call(self, statement, use_cache=True):
         """
         database call in native language. For example pymysql.connect() && pymsql.execute(statement)
 

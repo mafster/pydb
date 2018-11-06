@@ -1,14 +1,21 @@
+import warnings
+
 from pydb import connection
 
 try:
     from . import sqldb
 except ImportError as e:
-    pass
+    warnings.warn(str(e))
+    sqldb = None
 
 try:
     from . import mongodb
 except ImportError as e:
-    pass
+    warnings.warn(str(e))
+    mongodb = None
+
+if sqldb is None and mongodb is None:
+    raise RuntimeError('No available database python API. Please install one')
 
 
 def get_database_object(database_type, name, db_schema, **kwargs):
