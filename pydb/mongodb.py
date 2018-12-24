@@ -13,66 +13,46 @@ class MongoDatabase(database.Database):
         :param connectionData: connectionData object with required information for server/database connection
         :param dryRun:
         """
-        super(MongoDatabase, self).__init__(name=name, dbtype='MONGO', **kwargs)
+        super(MongoDatabase, self).__init__(name=name, database_type='mongo', **kwargs)
 
-        self.client = MongoClient(port=self.connectionData.port)
+        self._connect()
 
     @property
     def db(self):
         """ Returns the mongodb database object for further CRUD operations """
         return getattr(self.client, self.database)
 
-    def _raw_database_call(self, statement, use_cache=True):
-        pass
-
     def _connect(self):
-        self.client = MongoClient(port=self.connectionData.port)
+        self.client = MongoClient(host=self.connectionData.address, port=self.connectionData.port)
 
-    @classmethod
-    def clean_result(cls):
-        """
-
-        :param value:
-        :return:
-        """
-        raise NotImplementedError('Implement in subclass')
-
-    def find_one(self, table, **kwargs):
-        if len(kwargs.keys()) > 1:
-            raise RuntimeError('too many keywords passed')
-
-        queryDict = {kwargs.keys()[0]: kwargs.values()[0]}
-
-        return getattr(self.db, table).find_one(queryDict)
-
-    def query(self, field, **kwargs):
+    def query(self, **kwargs):
         """
 
         :param field:
         :param kwargs:
         :return:
         """
-        self.db
+        collection = getattr(self.db, self.db_schema)
+        cur = collection.find(kwargs)
 
-    def query_like(self, field, **kwargs):
-        """
+        return list(cur)
 
-            :param field:
-            :param kwargs:
-            :return:
+    def update(self, data, **kwargs):
         """
-        raise NotImplementedError('Implement in subclass')
-
-    def update(self, field, value, **kwargs):
-        """
-        Update a database entry by key referencing **kwargs
+        Update a database document/entry by key referencing **kwargs
 
         :param field:
         :param value:
         :param kwargs:
         :return:
         """
-        raise NotImplementedError('Implement in subclass')
+
+        new_values = {"$set": kwargs}
+
+        collection = getattr(self.db, self.db_schema)
+        print('updating {} with {}'.format(data, new_values))
+        result = collection.update_one(data, new_values)
+        print(result)
 
     def insert(self, **kwargs):
         """
@@ -81,12 +61,7 @@ class MongoDatabase(database.Database):
         :param kwargs:
         :return:
         """
-        raise NotImplementedError('Implement in subclass')
+        collection = getattr(self.db, self.db_schema)
+        post_id = collection.insert_one(kwargs).inserted_id
 
-    def delete(self, **kwargs):
-        """
-
-        :param kwargs:
-        :return:
-        """
-        raise NotImplementedError('Implement in subclass')
+        return post_id
