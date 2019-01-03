@@ -1,5 +1,4 @@
 import warnings
-
 import pymysql
 import pydb.database as database
 
@@ -33,10 +32,10 @@ class SQLDatabase(database.Database):
                                passwd=self.connectionData.password,
                                db=self.name)
 
-    def raw_database_call(self, statement, use_cache=True):
-        return self.execute_sql(statement=statement)
+    def raw_database_call(self, statement, use_cache=True, clean_result=False):
+        return self.execute_sql(statement=statement, clean_result=clean_result)
 
-    def execute_sql(self, statement, data_as_dict=False):
+    def execute_sql(self, statement, data_as_dict=False, clean_result=False):
         """
 
         :param statement:   *(str)* SQL statement
@@ -44,7 +43,7 @@ class SQLDatabase(database.Database):
         :param data_as_dict:*(bool)* if True will return result as dictionary for one result or list of dictionaries
         :return:            *(bool)* False if failed
         """
-        #print('\nsql: {}\n'.format(statement))
+        # print('\nsql: {}\n'.format(statement))
 
         #try:
         #    return self._use_cache(statement)
@@ -80,7 +79,8 @@ class SQLDatabase(database.Database):
             if conn:
                 conn.close()
 
-        result = self.clean_result(result)
+        if clean_result:
+            result = self.clean_result(result)
 
         self._store_cache(statement, result)
 
@@ -101,12 +101,14 @@ class SQLDatabase(database.Database):
 
         return value
 
-    def query(self, fields=None, data_as_dict=False, **kwargs):
+    def query(self, fields=None, data_as_dict=False, clean_result=False, **kwargs):
         """
 
         :param fields:          *(str, list(str))* the fields to query if None will query all '*'
         :param data_as_dict:    *(bool)* if True will return result as dictionary for one result or list of dictionaries
         :param distinct:        *(bool)* if True will return unqiue results only
+        :param order_by:        *(str)* will order the results by the field/key passed
+        :param clean_result:    *(bool)* if True will clean the result. Useful for calls will result in only 1 item
         :param kwargs:
         :return:
         """
@@ -137,7 +139,7 @@ class SQLDatabase(database.Database):
         if order_by:
             statement = '{} ORDER BY {} ASC'.format(statement, order_by)  # defaults order to "ascending"
 
-        return self.execute_sql(statement=statement, data_as_dict=data_as_dict)
+        return self.execute_sql(statement=statement, data_as_dict=data_as_dict, clean_result=clean_result)
 
     def query_like(self, field, **kwargs):
         """
@@ -156,10 +158,10 @@ class SQLDatabase(database.Database):
         """
         Update entries that match kwargs passed. Can take input as dict (param data) or as field-value params
 
-        :param data:    *(dict)* data takes preference over field, value
-        :param field:   *(list, str)*
-        :param value:   *(list, object)*
-        :param kwargs:  *(**dict)*
+        :param data:    *(dict)*         data takes preference over field, value
+        :param field:   *(list, str)*    list of fields to update
+        :param value:   *(list, object)* list of values to add to fields passed (order must match)
+        :param kwargs:  *(**dict)*       conditions on which to update. Method will raise error if no kwargs passed
         :return:
         """
         if not kwargs:
@@ -168,6 +170,7 @@ class SQLDatabase(database.Database):
         set_data = []
 
         if data:
+            # Convert data param to list of "key=value" pairs
             for key, val in data.items():
                 if key and val:
                     set_data.append("{} = '{}'".format(key, val))
