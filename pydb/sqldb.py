@@ -101,7 +101,7 @@ class SQLDatabase(database.Database):
 
         return value
 
-    def query(self, fields=None, data_as_dict=False, clean_result=False, **kwargs):
+    def query(self, fields=None, data_as_dict=True, clean_result=False, **kwargs):
         """
 
         :param fields:          *(str, list(str))* the fields to query if None will query all '*'

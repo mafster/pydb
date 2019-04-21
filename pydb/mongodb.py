@@ -23,12 +23,16 @@ class MongoDatabase(database.Database):
         return getattr(self.client, self.database)
 
     def _connect(self):
-        self.client = MongoClient(host=self.connectionData.address, port=self.connectionData.port)
+        self.client = MongoClient(host=self.connectionData.address,
+                                  port=self.connectionData.port,
+                                  username=self.connectionData.username,
+                                  password=self.connectionData.password,
+                                  authSource=self.connectionData.authSource,
+                                  authMechanism=self.connectionData.authMechanism,)
 
     def query(self, **kwargs):
         """
 
-        :param field:
         :param kwargs:
         :return:
         """
