@@ -103,10 +103,10 @@ class SQLDatabase(database.Database):
 
         return value
 
-    def query(self, fields=None, data_as_dict=True, clean_result=False, **kwargs):
+    def find(self, fields=None, data_as_dict=True, clean_result=False, **kwargs):
         """
 
-        :param fields:          *(str, list(str))* the fields to query if None will query all '*'
+        :param fields:          *(str, list(str))* the fields to find if None will find all '*'
         :param data_as_dict:    *(bool)* if True will return result as dictionary for one result or list of dictionaries
         :param distinct:        *(bool)* if True will return unqiue results only
         :param order_by:        *(str)* will order the results by the field/key passed

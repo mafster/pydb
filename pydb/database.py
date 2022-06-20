@@ -1,4 +1,4 @@
-class Database(object):
+class Database:
     """
     Generic abstract database object. Define database calls in subclasses.
     Typical usage would be of subclass only.
@@ -59,7 +59,7 @@ class Database(object):
         Example may follow:
         0. Check cache for results if not result then...
         1. connect
-        2. send query
+        2. send find
         3. process results
         4. close connection
         5. update cache
@@ -76,7 +76,7 @@ class Database(object):
         """
         raise NotImplementedError('Implement in subclass')
 
-    def query(self, field, **kwargs):
+    def find(self, field, **kwargs):
         """
 
         :param field:

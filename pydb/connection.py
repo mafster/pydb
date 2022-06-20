@@ -1,4 +1,4 @@
-class ConnectionData(object):
+class ConnectionData:
 
     def __init__(self, username, password, address, port, **kwargs):
         """

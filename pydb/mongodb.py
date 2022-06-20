@@ -1,3 +1,7 @@
+from typing import Any
+
+from pymongo.results import UpdateResult
+
 import pydb.database as database
 
 from pymongo import MongoClient
@@ -5,16 +9,16 @@ from pymongo import MongoClient
 
 class MongoDatabase(database.Database):
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, name: str, db_schema: str, connection_string: str):
         """
         Inherits Database class. Sets type to "MONGO"
 
         :param name: name of database. This is not a label but the actual database name
-        :param connectionData: connectionData object with required information for server/database connection
-        :param dryRun:
+        :param connection_string: mongo connectionString
         """
-        super(MongoDatabase, self).__init__(name=name, database_type='mongo', **kwargs)
+        super(MongoDatabase, self).__init__(name=name, database_type='mongo', db_schema=db_schema)
 
+        self.connection_string = connection_string
         self._connect()
 
     @property
@@ -23,48 +27,39 @@ class MongoDatabase(database.Database):
         return getattr(self.client, self.database)
 
     def _connect(self):
-        if hasattr(self.connectionData, 'authSource'):
-            self.client = MongoClient(host=self.connectionData.address,
-                                      port=self.connectionData.port,
-                                      username=self.connectionData.username,
-                                      password=self.connectionData.password,
-                                      authSource=self.connectionData.authSource,
-                                      authMechanism=self.connectionData.authMechanism)
-        else:
-            self.client = MongoClient(host=self.connectionData.address,
-                                      port=self.connectionData.port,
-                                      username=self.connectionData.username,
-                                      password=self.connectionData.password)
+        self.client = MongoClient(self.connection_string)
 
-    def query(self, **kwargs):
+    def find(self, **kwargs) -> list[Any]:
         """
 
         :param kwargs:
         :return:
         """
+        _filter = kwargs.pop('filter', {})
+        projection = kwargs.pop('projection', {})
+        print('db - filter', _filter)
+        print('db - projection', projection)
         collection = getattr(self.db, self.db_schema)
-        cur = collection.find(kwargs)
+        cur = collection.find(filter=_filter, projection=projection, **kwargs)
 
         return list(cur)
 
-    def update(self, data, **kwargs):
+    def update(self, _filter, update, **kwargs) -> UpdateResult:
         """
         Update a database document/entry by key referencing **kwargs
 
-        :param field:
-        :param value:
+        :param _filter:
+        :param update:
         :param kwargs:
         :return:
         """
 
-        new_values = {"$set": kwargs}
-
         collection = getattr(self.db, self.db_schema)
-        print('updating {} with {}'.format(data, new_values))
-        result = collection.update_one(data, new_values)
-        print(result)
+        print(f'db - filter {_filter}\ndb - update {update}')
+        result = collection.update_one(_filter, update, **kwargs)
+        return result
 
-    def insert(self, **kwargs):
+    def insert(self, **kwargs) -> str:
         """
         Insert a new database entry
 
